@@ -10,7 +10,7 @@ function App() {
   const [email, setEmail] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/events")
+    fetch("https://sydney-event-scraper.onrender.com/api/events")
       .then((res) => res.json())
       .then((data) => setEvents(data));
   }, []);
@@ -21,7 +21,7 @@ function App() {
   };
 
   const handleSubmit = () => {
-    fetch("http://localhost:5000/api/submit-email", {
+    fetch("https://sydney-event-scraper.onrender.com/api/submit-email", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
