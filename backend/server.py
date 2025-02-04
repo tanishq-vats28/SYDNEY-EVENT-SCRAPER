@@ -3,6 +3,7 @@ from flask_cors import CORS
 import requests
 from bs4 import BeautifulSoup
 from apscheduler.schedulers.background import BackgroundScheduler
+import os
 
 app = Flask(__name__)
 CORS(app)
@@ -18,25 +19,26 @@ def scrape_events():
                            'AppleWebKit/537.36 (KHTML, like Gecko) '
                            'Chrome/58.0.3029.110 Safari/537.3')
         }
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()  # Handle HTTP errors
         soup = BeautifulSoup(response.text, 'html.parser')
-        
+
         events_container = soup.select_one("ul.event-card-parent")
         if not events_container:
             print("Events container not found")
             return
-        
+
         events = []
-        
+
         for event in events_container.find_all('li', class_='event-card'):
             title_tag = event.find('h3')
             title = title_tag.text.strip() if title_tag else ''
-            
+
             date_tag = event.find('div', class_='date')
             date = date_tag.text.strip() if date_tag else ''
-            
+
             booking_link = event.get('data-link', '')
-            
+
             if title and date and booking_link:
                 events.append({
                     'title': title,
@@ -44,6 +46,8 @@ def scrape_events():
                     'booking_link': booking_link
                 })
         print("Events scraped successfully")
+    except requests.RequestException as e:
+        print(f"Error fetching events: {e}")
     except Exception as e:
         print(f"Error scraping events: {e}")
 
@@ -65,4 +69,5 @@ def submit_email():
     return jsonify({'success': True})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
